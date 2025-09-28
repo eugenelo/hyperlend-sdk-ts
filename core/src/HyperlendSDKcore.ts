@@ -415,18 +415,6 @@ export class HyperlendSDKcore {
         const signer = this.providerOrSigner as Signer;
         const userAddress = onBehalfOf || await signer.getAddress();
 
-        // Check borrowing capacity first
-        const userData = await this.getUserAccountData(userAddress);
-
-        // Simple check without price conversion
-        // We'll assume the amount is already in the correct denomination
-        if (amount.gt(userData.availableBorrowsBase)) {
-            throw new Error(
-                `Insufficient borrowing capacity. Available: ${userData.availableBorrowsBase}, ` +
-                `Requested: ${amount})}`
-            );
-        }
-
         const poolContract = PoolABI__factory.connect(
             this.poolAddress,
             signer
