@@ -431,17 +431,8 @@ export class HyperlendSDKcore {
             await tx.wait(1);
             return {transactionHash: tx.hash};
         } catch (error) {
-            console.log("Borrow failed, retrying with manual gas limit...");
-            const tx = await poolContract.borrow(
-                asset,
-                amount,
-                interestRateMode,
-                referralCode,
-                userAddress,
-                {gasLimit: 500000}
-            );
-            await tx.wait(1);
-            return {transactionHash: tx.hash};
+            console.log(`Borrow failed, error: ${error}`);
+            throw(error);
         }
     }
 
@@ -452,7 +443,8 @@ export class HyperlendSDKcore {
         asset: string,
         amount: BigNumber,
         interestRateMode: InterestRateMode,
-        onBehalfOf?: string
+        onBehalfOf?: string,
+        withATokens: boolean=false,
     ): Promise<{ transactionHash: string }> {
         if (!this.isSigner(this.providerOrSigner)) {
             throw new Error("Signer is required for repay operation");
@@ -470,25 +462,21 @@ export class HyperlendSDKcore {
         );
 
         try {
-            const tx = await poolContract.repay(
+            const tx = await ((withATokens) ? poolContract.repayWithATokens(
+                asset,
+                amount,
+                interestRateMode
+            ) : poolContract.repay(
                 asset,
                 amount,
                 interestRateMode,
                 userAddress
-            );
+            ));
             await tx.wait(1);
             return {transactionHash: tx.hash};
         } catch (error) {
-            console.log("Repay failed, retrying with manual gas limit...");
-            const tx = await poolContract.repay(
-                asset,
-                amount,
-                interestRateMode,
-                userAddress,
-                {gasLimit: 500000}
-            );
-            await tx.wait(1);
-            return {transactionHash: tx.hash};
+            console.log(`Repay failed, error: ${error}`);
+            throw(error);
         }
     }
 
