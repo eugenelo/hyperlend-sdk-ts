@@ -443,8 +443,8 @@ export class HyperlendSDKcore {
         asset: string,
         amount: BigNumber,
         interestRateMode: InterestRateMode,
-        onBehalfOf?: string,
         withATokens: boolean=false,
+        onBehalfOf?: string,
     ): Promise<{ transactionHash: string }> {
         if (!this.isSigner(this.providerOrSigner)) {
             throw new Error("Signer is required for repay operation");
