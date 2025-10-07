@@ -431,8 +431,17 @@ export class HyperlendSDKcore {
             await tx.wait(1);
             return {transactionHash: tx.hash};
         } catch (error) {
-            console.log(`Borrow failed, error: ${error}`);
-            throw(error);
+            console.log("Borrow failed, retrying with manual gas limit...");
+            const tx = await poolContract.borrow(
+                asset,
+                amount,
+                interestRateMode,
+                referralCode,
+                userAddress,
+                {gasLimit: 500000}
+            );
+            await tx.wait(1);
+            return {transactionHash: tx.hash};
         }
     }
 
@@ -475,8 +484,21 @@ export class HyperlendSDKcore {
             await tx.wait(1);
             return {transactionHash: tx.hash};
         } catch (error) {
-            console.log(`Repay failed, error: ${error}`);
-            throw(error);
+            console.log("Repay failed, retrying with manual gas limit...");
+            const tx = await ((withATokens) ? poolContract.repayWithATokens(
+                asset,
+                amount,
+                interestRateMode,
+                {gasLimit: 500000}
+            ) : poolContract.repay(
+                asset,
+                amount,
+                interestRateMode,
+                userAddress,
+                {gasLimit: 500000}
+            ));
+            await tx.wait(1);
+            return {transactionHash: tx.hash};
         }
     }
 
