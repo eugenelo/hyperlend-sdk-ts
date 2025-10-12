@@ -351,13 +351,15 @@ export class HyperlendSDKcore {
      * @param amount The amount to supply
      * @param onBehalfOf Optional: The address that will receive the aTokens (defaults to signer)
      * @param referralCode Optional: Referral code (defaults to 0)
+     * @param gasLimit Optional: Gas limit for the transaction
      * @returns Transaction hash
      */
     public async supply(
         asset: string,
         amount: BigNumber,
         onBehalfOf?: string,
-        referralCode: number = 0
+        referralCode: number = 0,
+        gasLimit?: number
     ): Promise<{ transactionHash: string }> {
         if (!this.isSigner(this.providerOrSigner)) {
             throw new Error("Signer is required for supply operation");
@@ -374,39 +376,41 @@ export class HyperlendSDKcore {
             signer
         );
 
+        const overrides = gasLimit ? { gasLimit } : {};
+
         try {
             const tx = await poolContract.supply(
                 asset,
                 amount,
                 userAddress,
-                referralCode
+                referralCode,
+                overrides
             );
             await tx.wait(1);
             return {transactionHash: tx.hash};
         } catch (error) {
-            // If the transaction still fails, try with a manual gas limit
-            console.log("Supply failed, retrying with manual gas limit...");
-            const tx = await poolContract.supply(
-                asset,
-                amount,
-                userAddress,
-                referralCode,
-                {gasLimit: 500000}
-            );
-            await tx.wait(1);
-            return {transactionHash: tx.hash};
+            console.log(`Supply failed, error: ${error}`);
+            throw(error);
         }
     }
 
     /**
      * Borrow assets from the protocol
+     * @param asset The address of the asset to borrow
+     * @param amount The amount to borrow
+     * @param interestRateMode The interest rate mode (stable or variable)
+     * @param referralCode Optional: Referral code (defaults to 0)
+     * @param onBehalfOf Optional: The address that will receive the debt (defaults to signer)
+     * @param gasLimit Optional: Gas limit for the transaction
+     * @returns Transaction hash
      */
     public async borrow(
         asset: string,
         amount: BigNumber,
         interestRateMode: InterestRateMode,
         referralCode: number = 0,
-        onBehalfOf?: string
+        onBehalfOf?: string,
+        gasLimit?: number
     ): Promise<{ transactionHash: string }> {
         if (!this.isSigner(this.providerOrSigner)) {
             throw new Error("Signer is required for borrow operation");
@@ -420,33 +424,34 @@ export class HyperlendSDKcore {
             signer
         );
 
+        const overrides = gasLimit ? { gasLimit } : {};
+
         try {
             const tx = await poolContract.borrow(
                 asset,
                 amount,
                 interestRateMode,
                 referralCode,
-                userAddress
+                userAddress,
+                overrides
             );
             await tx.wait(1);
             return {transactionHash: tx.hash};
         } catch (error) {
-            console.log("Borrow failed, retrying with manual gas limit...");
-            const tx = await poolContract.borrow(
-                asset,
-                amount,
-                interestRateMode,
-                referralCode,
-                userAddress,
-                {gasLimit: 500000}
-            );
-            await tx.wait(1);
-            return {transactionHash: tx.hash};
+            console.log(`Borrow failed, error: ${error}`);
+            throw error;
         }
     }
 
     /**
      * Repay a debt on the protocol
+     * @param asset The address of the asset to repay
+     * @param amount The amount to repay
+     * @param interestRateMode The interest rate mode (stable or variable)
+     * @param withATokens Whether to repay with aTokens
+     * @param onBehalfOf Optional: The address whose debt to repay (defaults to signer)
+     * @param gasLimit Optional: Gas limit for the transaction
+     * @returns Transaction hash
      */
     public async repay(
         asset: string,
@@ -454,6 +459,7 @@ export class HyperlendSDKcore {
         interestRateMode: InterestRateMode,
         withATokens: boolean=false,
         onBehalfOf?: string,
+        gasLimit?: number,
     ): Promise<{ transactionHash: string }> {
         if (!this.isSigner(this.providerOrSigner)) {
             throw new Error("Signer is required for repay operation");
@@ -470,45 +476,42 @@ export class HyperlendSDKcore {
             signer
         );
 
+        const overrides = gasLimit ? { gasLimit } : {};
+
         try {
             const tx = await ((withATokens) ? poolContract.repayWithATokens(
                 asset,
                 amount,
-                interestRateMode
-            ) : poolContract.repay(
-                asset,
-                amount,
                 interestRateMode,
-                userAddress
-            ));
-            await tx.wait(1);
-            return {transactionHash: tx.hash};
-        } catch (error) {
-            console.log("Repay failed, retrying with manual gas limit...");
-            const tx = await ((withATokens) ? poolContract.repayWithATokens(
-                asset,
-                amount,
-                interestRateMode,
-                {gasLimit: 500000}
+                overrides
             ) : poolContract.repay(
                 asset,
                 amount,
                 interestRateMode,
                 userAddress,
-                {gasLimit: 500000}
+                overrides
             ));
             await tx.wait(1);
             return {transactionHash: tx.hash};
+        } catch (error) {
+            console.log(`Repay failed, error: ${error}`);
+            throw error;
         }
     }
 
     /**
      * Withdraw assets from the protocol
+     * @param asset The address of the asset to withdraw
+     * @param amount The amount to withdraw
+     * @param to Optional: The address that will receive the withdrawn assets (defaults to signer)
+     * @param gasLimit Optional: Gas limit for the transaction
+     * @returns Transaction hash
      */
     public async withdraw(
         asset: string,
         amount: BigNumber,
-        to?: string
+        to?: string,
+        gasLimit?: number
     ): Promise<{ transactionHash: string }> {
         if (!this.isSigner(this.providerOrSigner)) {
             throw new Error("Signer is required for withdraw operation");
@@ -522,33 +525,34 @@ export class HyperlendSDKcore {
             signer
         );
 
+        const overrides = gasLimit ? { gasLimit } : {};
+
         try {
             const tx = await poolContract.withdraw(
                 asset,
                 amount,
-                recipient
+                recipient,
+                overrides
             );
             await tx.wait(1);
             return {transactionHash: tx.hash};
         } catch (error) {
-            console.log("Withdraw failed, retrying with manual gas limit...");
-            const tx = await poolContract.withdraw(
-                asset,
-                amount,
-                recipient,
-                {gasLimit: 500000}
-            );
-            await tx.wait(1);
-            return {transactionHash: tx.hash};
+            console.log(`Withdraw failed, error: ${error}`);
+            throw error;
         }
     }
 
     /**
      * Enable or disable usage of a reserve as collateral
+     * @param asset The address of the asset
+     * @param useAsCollateral Whether to use the asset as collateral
+     * @param gasLimit Optional: Gas limit for the transaction
+     * @returns Transaction hash
      */
     public async setUserUseReserveAsCollateral(
         asset: string,
-        useAsCollateral: boolean
+        useAsCollateral: boolean,
+        gasLimit?: number
     ): Promise<{ transactionHash: string }> {
         if (!this.isSigner(this.providerOrSigner)) {
             throw new Error("Signer is required for setUserUseReserveAsCollateral operation");
@@ -561,29 +565,29 @@ export class HyperlendSDKcore {
             signer
         );
 
+        const overrides = gasLimit ? { gasLimit } : {};
+
         try {
             const tx = await poolContract.setUserUseReserveAsCollateral(
                 asset,
-                useAsCollateral
+                useAsCollateral,
+                overrides
             );
             await tx.wait(1);
             return {transactionHash: tx.hash};
         } catch (error) {
-            console.log("SetUserUseReserveAsCollateral failed, retrying with manual gas limit...");
-            const tx = await poolContract.setUserUseReserveAsCollateral(
-                asset,
-                useAsCollateral,
-                {gasLimit: 500000}
-            );
-            await tx.wait(1);
-            return {transactionHash: tx.hash};
+            console.log(`SetUserUseReserveAsCollateral failed, error: ${error}`);
+            throw error;
         }
     }
 
     /**
      * Set the user's E-Mode category
+     * @param categoryId The E-Mode category ID to set
+     * @param gasLimit Optional: Gas limit for the transaction
+     * @returns Transaction hash
      */
-    public async setUserEMode(categoryId: number): Promise<{ transactionHash: string }> {
+    public async setUserEMode(categoryId: number, gasLimit?: number): Promise<{ transactionHash: string }> {
         if (!this.isSigner(this.providerOrSigner)) {
             throw new Error("Signer is required for setUserEMode operation");
         }
@@ -595,18 +599,15 @@ export class HyperlendSDKcore {
             signer
         );
 
+        const overrides = gasLimit ? { gasLimit } : {};
+
         try {
-            const tx = await poolContract.setUserEMode(categoryId);
+            const tx = await poolContract.setUserEMode(categoryId, overrides);
             await tx.wait(1);
             return {transactionHash: tx.hash};
         } catch (error) {
-            console.log("SetUserEMode failed, retrying with manual gas limit...");
-            const tx = await poolContract.setUserEMode(
-                categoryId,
-                {gasLimit: 500000}
-            );
-            await tx.wait(1);
-            return {transactionHash: tx.hash};
+            console.log(`SetUserEMode failed, error: ${error}`);
+            throw error;
         }
     }
 
