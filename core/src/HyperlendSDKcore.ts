@@ -270,6 +270,47 @@ export class HyperlendSDKcore {
     }
 
     /**
+     * Get user reserve data
+     * @param assetAddress The address of the asset
+     * @param userAddress The address of the user
+     * @returns User reserve data
+     */
+    public async getUserReserveData(assetAddress: string, userAddress: string): Promise<{
+        currentATokenBalance: BigNumber;
+        currentStableDebt: BigNumber;
+        currentVariableDebt: BigNumber;
+        principalStableDebt: BigNumber;
+        scaledVariableDebt: BigNumber;
+        stableBorrowRate: BigNumber;
+        liquidityRate: BigNumber;
+        stableRateLastUpdated: number;
+        usageAsCollateralEnabled: boolean;
+    }> {
+        const dataProviderContract = AaveProtocolDataProviderABI__factory.connect(
+            this.dataProviderAddress,
+            this.providerOrSigner
+        );
+        const [
+                currentATokenBalance, currentStableDebt, currentVariableDebt, principalStableDebt, scaledVariableDebt,
+                stableBorrowRate, liquidityRate, stableRateLastUpdated, usageAsCollateralEnabled
+        ] = await dataProviderContract.getUserReserveData(
+            assetAddress,
+            userAddress
+        );
+        return {
+            currentATokenBalance,
+            currentStableDebt,
+            currentVariableDebt,
+            principalStableDebt,
+            scaledVariableDebt,
+            stableBorrowRate,
+            liquidityRate,
+            stableRateLastUpdated,
+            usageAsCollateralEnabled
+        };
+    }
+
+    /**
      * Get detailed data for a specific reserve
      * @param assetAddress The address of the reserve asset
      * @returns Detailed reserve data
